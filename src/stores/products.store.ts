@@ -3,10 +3,11 @@ import type { Category, Product } from '../types/product'
 import { ApiError } from '../api/http'
 import { getCategories, getProducts, getProductsByCategory } from '../api/product.api'
 
-type ProductsState = {
+export type ProductsState = {
     items: Product[]
     categories: Category[]
     selectedCategory: Category | null
+    loaded: boolean
     loading: boolean
     error: ApiError | null
     sort: 'priceAsc' | 'priceDesc' | 'ratingDesc'
@@ -19,6 +20,7 @@ export const useProductsStore = defineStore('products', {
         items: [],
         categories: [],
         selectedCategory: null,
+        loaded: false,
         loading: false,
         error: null,
         sort: 'priceAsc'
@@ -42,6 +44,7 @@ export const useProductsStore = defineStore('products', {
                 if (abortController) abortController.abort()
                 abortController = currentController
                 this.items = this.selectedCategory ? await getProductsByCategory(this.selectedCategory, abortController.signal) : await getProducts(abortController.signal)
+                this.loaded = true
             } catch (error) {
                 if (error instanceof ApiError && error.kind !== "abort") this.error = error
             } finally {

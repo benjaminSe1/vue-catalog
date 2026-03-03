@@ -1,68 +1,73 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
-import { useProductsStore } from '../stores/products.store';
-import { storeToRefs } from 'pinia';
-import { useFavoritesStore } from '../stores/favorites.store';
+import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useProductsStore } from '../stores/products.store'
+import { useFavoritesStore } from '../stores/favorites.store'
+import ProductSort from '../components/ProductSort.vue'
+import ProductCard from '../components/ProductCard.vue';
+
 
 const productStore = useProductsStore()
-const { categories, selectedCategory, sort, loading, error, visibleProducts } = storeToRefs(productStore)
-const { fetchProducts, fetchCategories } = productStore
+const { sort, loaded, loading, error, visibleProducts } = storeToRefs(productStore)
+const { fetchProducts } = productStore
 
 const favoritesStore = useFavoritesStore()
-const { ids: favoritesProducts } = storeToRefs(favoritesStore)
 const { toggleFavorite } = favoritesStore
 
+const favoritesSet = computed(() => new Set(favoritesStore.ids))
+const isFav = (id: number) => favoritesSet.value.has(id)
+
+const favoriteVisibleProducts = computed(() =>
+  visibleProducts.value.filter((p) => isFav(p.id)),
+)
+
 onMounted(() => {
-  Promise.allSettled([fetchCategories(), fetchProducts()])
+  // Ne charge les produits que si nécessaire
+  if (favoritesStore.count > 0 && !loaded.value) fetchProducts()
 })
-
-watch(selectedCategory, (newVal, oldVal) => { if (newVal !== oldVal) fetchProducts() })
-
-
-const computedCategories = computed(() => [
-  { value: null, title: 'All categories' },
-  ...categories.value.map((cat) => ({ value: cat, title: cat }))
-])
-
-const sortKeys = [
-  { value: 'priceAsc', title: 'Price: Low to High' },
-  { value: 'priceDesc', title: 'Price: High to Low' },
-  { value: 'ratingDesc', title: 'Rating: High to Low' }
-]
 </script>
 
 <template>
   <v-container>
     <v-row>
-      <v-col class="categories">
-        <h2>Categories</h2>
-        <v-select v-model="selectedCategory" item-title="title" item-value="value" :items="computedCategories" clearable
-          label="Select Category"></v-select>
-      </v-col>
       <v-col class="sort">
-        <h2>Sort By</h2>
-        <v-select v-model="sort" :items="sortKeys" item-title="title" item-value="value" clearable
-          label="Select Sort"></v-select>
+        <Product-sort v-model="sort" />
       </v-col>
     </v-row>
+
     <v-container class="products">
-      <v-progress-linear v-if="loading" class="mb-4" indeterminate></v-progress-linear>
-      <v-alert v-else-if="error" type="error">{{ error.message }}</v-alert>
+      <v-progress-linear v-if="loading" class="mb-4" indeterminate />
+
+      <v-alert v-else-if="error" type="error" class="mb-4">
+        {{ error.message }}
+        <div class="mt-2">
+          <v-btn size="small" variant="tonal" @click="fetchProducts()">Retry</v-btn>
+        </div>
+      </v-alert>
+
       <v-container v-else>
-        <v-row>
-          <v-col v-for="item in visibleProducts" :key="item.id" cols="12" md="6" lg="4" sm="6">
-            <v-card @click="$router.push(`/products/${item.id}`)" class="product-card" outlined>
-              <v-btn icon variant="text" @click="toggleFavorite(item.id)" class="position-absolute top-0 right-0">
-                <v-icon>
-                  {{ favoritesProducts.includes(item.id) ? 'mdi-heart' : 'mdi-heart-outline' }}
-                </v-icon>
-              </v-btn>
-              <v-card-title>{{ item.title }}</v-card-title>
-              <v-img :src="item.image" :alt="item.title" aspect-ratio="16/9" height="200" />
-              <v-card-text>Price: ${{ item.price }}</v-card-text>
-              <v-card-text>Rating: {{ item.rating.rate }} ({{ item.rating.count }} reviews)</v-card-text>
-              <v-card-text>{{ item.description }}</v-card-text>
-            </v-card>
+        <!-- Empty state "no favorites" (simple) -->
+        <v-row v-if="favoritesStore.count === 0">
+          <v-col cols="12">
+            <v-alert type="info" variant="tonal">
+              No favorites yet.
+              <div class="mt-2">
+                <v-btn :to="{ name: 'products' }" variant="flat">Browse products</v-btn>
+              </div>
+            </v-alert>
+          </v-col>
+        </v-row>
+
+        <!-- Data state -->
+        <v-row v-else>
+          <v-col v-if="favoriteVisibleProducts.length === 0" cols="12">
+            <v-alert type="info" variant="tonal">
+              No favorites found.
+            </v-alert>
+          </v-col>
+
+          <v-col v-else v-for="item in favoriteVisibleProducts" :key="item.id" cols="12" sm="6" md="6" lg="4">
+            <product-card :product="item" :isFavorite="isFav(item.id)" @toggle-favorite="toggleFavorite" />
           </v-col>
         </v-row>
       </v-container>

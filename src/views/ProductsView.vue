@@ -2,28 +2,30 @@
 import { computed, onMounted, watch } from 'vue';
 import { useProductsStore } from '../stores/products.store';
 import { storeToRefs } from 'pinia';
+import { useFavoritesStore } from '../stores/favorites.store';
+import ProductCard from '../components/ProductCard.vue';
+import ProductSort from '../components/ProductSort.vue';
 
 const productStore = useProductsStore()
 const { categories, selectedCategory, sort, loading, error, visibleProducts } = storeToRefs(productStore)
 const { fetchProducts, fetchCategories } = productStore
 
+const favoritesStore = useFavoritesStore()
+const { toggleFavorite } = favoritesStore
+
+const favoritesSet = computed(() => new Set(favoritesStore.ids))
+const isFav = (id: number) => favoritesSet.value.has(id)
+
 onMounted(() => {
   Promise.allSettled([fetchCategories(), fetchProducts()])
 })
 
-watch(selectedCategory, (newVal, oldVal) => { if (newVal !== oldVal) fetchProducts() })
-
+watch(selectedCategory, () => fetchProducts())
 
 const computedCategories = computed(() => [
   { value: null, title: 'All categories' },
   ...categories.value.map((cat) => ({ value: cat, title: cat }))
 ])
-
-const sortKeys = [
-  { value: 'priceAsc', title: 'Price: Low to High' },
-  { value: 'priceDesc', title: 'Price: High to Low' },
-  { value: 'ratingDesc', title: 'Rating: High to Low' }
-]
 </script>
 
 <template>
@@ -35,9 +37,7 @@ const sortKeys = [
           label="Select Category"></v-select>
       </v-col>
       <v-col class="sort">
-        <h2>Sort By</h2>
-        <v-select v-model="sort" :items="sortKeys" item-title="title" item-value="value" clearable
-          label="Select Sort"></v-select>
+        <product-sort v-model="sort" />
       </v-col>
     </v-row>
     <v-container class="products">
@@ -46,13 +46,7 @@ const sortKeys = [
       <v-container v-else>
         <v-row>
           <v-col v-for="item in visibleProducts" :key="item.id" cols="12" md="6" lg="4" sm="6">
-            <v-card @click="$router.push(`/products/${item.id}`)" class="product-card" outlined>
-              <v-card-title>{{ item.title }}</v-card-title>
-              <v-img :src="item.image" :alt="item.title" aspect-ratio="16/9" height="200" />
-              <v-card-text>Price: ${{ item.price }}</v-card-text>
-              <v-card-text>Rating: {{ item.rating.rate }} ({{ item.rating.count }} reviews)</v-card-text>
-              <v-card-text>{{ item.description }}</v-card-text>
-            </v-card>
+            <product-card :product="item" :isFavorite="isFav(item.id)" @toggle-favorite="toggleFavorite" />
           </v-col>
         </v-row>
       </v-container>

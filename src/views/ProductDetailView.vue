@@ -15,15 +15,11 @@ const idProduct = computed(() => typeof route.params.id === "string" && Number.i
 const favoritesStore = useFavoritesStore()
 const { ids: favoritesProducts } = storeToRefs(favoritesStore)
 const { toggleFavorite } = favoritesStore
-
 const isFavorite = computed(() => !!idProduct.value && favoritesProducts.value?.includes(idProduct.value))
-
 
 const loading = ref(false)
 const error = ref<ApiError | null>(null)
 const currentProduct = ref<Product | null>(null)
-
-
 
 const setProductDetail = async (id: number) => {
   loading.value = true

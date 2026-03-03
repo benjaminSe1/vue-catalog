@@ -6,10 +6,23 @@ type FavoritesState = {
 
 const KEY = "favorites";
 const persist = (ids: number[]) => localStorage.setItem(KEY, JSON.stringify(ids))
+const safeParseIds = (jsonToParse: string) => {
+    try {
+        const ids = JSON.parse(jsonToParse)
+        if (Array.isArray(ids)) {
+            return ids.map(Number).filter(Number.isFinite)
+        } else {
+            throw new Error("Invalid ids")
+        }
+    } catch (error: unknown) {
+        console.error("An error happened while parsing favorites product", error)
+        return []
+    }
+}
 
 export const useFavoritesStore = defineStore('favorites', {
     state: (): FavoritesState => ({
-        ids: JSON.parse(localStorage.getItem(KEY) ?? '[]'),
+        ids: safeParseIds(localStorage.getItem(KEY) ?? '[]'),
     }),
     actions: {
         addFavorite(id: number) {
@@ -23,7 +36,6 @@ export const useFavoritesStore = defineStore('favorites', {
         toggleFavorite(id: number) {
             if (this.ids.includes(id)) this.removeFavorite(id)
             else this.addFavorite(id)
-            persist(this.ids)
         }
     },
     getters: {
