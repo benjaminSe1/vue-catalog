@@ -5,61 +5,99 @@ This template should help get you started developing with Vue 3 and TypeScript i
 Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
 
 
-### 🔁 PROMPT DE REPRISE
+# 🔁 PROMPT DE REPRISE
 
-Je travaille sur un projet Vue 3 + TypeScript + Vite avec pnpm.
+Je travaille sur un projet Vue 3 + TypeScript strict + Vite + pnpm.
 
-Stack actuelle :
-- Vue 3
-- Pinia (object store syntax)
-- Vue Router v4
+## 🧱 Stack
+
+- Vue 3 `<script setup>`
+- Pinia (Options Store)
+- Vue Router 4
 - Vuetify
 - TypeScript strict
 - API : https://fakestoreapi.com
 
-Architecture actuelle :
+---
 
+## 📁 Architecture actuelle
+
+```
 src/
-- api/
-  - http.ts (apiGet<T>, ApiError avec kind: 'http' | 'network' | 'parse' | 'abort')
-  - products.api.ts (getProducts, getProduct, getCategories, getProductsByCategory avec AbortSignal)
-- types/
-  - product.ts (Product, Rating, Category)
-- stores/
-  - products.store.ts (Pinia store avec AbortController module-scope, fetchProducts, fetchCategories, getter visibleProducts avec tri)
-- views/
-  - ProductsView.vue (en cours de construction)
+├─ api/
+│  ├─ http.ts (apiGet<T>, ApiError avec kind: 'http' | 'network' | 'parse' | 'abort')
+│  └─ product.api.ts (getProducts, getProduct, getCategories, getProductsByCategory avec AbortSignal)
+│
+├─ types/
+│  └─ product.ts (Product, Rating, Category)
+│
+├─ stores/
+│  ├─ products.store.ts
+│  │   - state: items, categories, selectedCategory, loading, error, sort, loaded
+│  │   - AbortController module-scope
+│  │   - fetchProducts annule la requête précédente
+│  │   - visibleProducts getter avec tri
+│  │
+│  └─ favorites.store.ts
+│      - ids: number[]
+│      - persistance localStorage
+│      - toggleFavorite
+│
+├─ composables/
+│  └─ useIsFavorite.ts (computed Set + isFav)
+│
+├─ components/
+│  ├─ ProductCard.vue (props product + isFavorite | emits toggle-favorite typé)
+│  └─ ProductSort.vue (defineModel sur sort)
+│
+└─ views/
+   ├─ ProductsView.vue
+   ├─ FavoritesView.vue
+   └─ ProductDetailView.vue
+```
 
-Le store :
-- state :
-  - items: Product[]
-  - categories: Category[]
-  - selectedCategory: Category | null
-  - loading: boolean
-  - error: ApiError | null
-  - sort: 'priceAsc' | 'priceDesc' | 'ratingDesc'
-- abortController en module scope
-- fetchProducts annule la requête précédente
-- visibleProducts retourne une copie triée
+---
 
-Ce qui fonctionne :
-- API layer complet et typé
-- AbortController géré côté store
-- Tri côté getter
+## ✅ Ce qui fonctionne
 
-Ce qui reste à faire :
-- Finaliser ProductsView.vue
-  - onMounted : fetchCategories + fetchProducts
-  - watch selectedCategory → refetch
-  - v-select catégorie + sort
-  - grid produits (Vuetify)
-- Puis ProductDetailView
-- Puis favorites store + persistance localStorage
+- API layer entièrement typé
+- Gestion fine des erreurs (ApiError avec kind)
+- AbortController propre (store + detail view)
+- Tri factorisé via ProductSort
+- Card produit factorisée via ProductCard
+- Favoris persistés dans localStorage
+- Flag `loaded` pour distinguer non-chargé / chargé
+- Membership favoris en O(1) via Set
+- Events typés via `defineEmits`
+- Architecture propre, séparation responsabilités
 
-Je veux continuer l’exercice en mode professeur :
-- Donne-moi les étapes
-- Donne-moi des indices
-- Ne me donne pas directement la solution complète
-- Fais des reviews techniques
+---
 
-On reprend à la construction propre de ProductsView.vue.
+## 🎯 Objectif
+
+Continuer l’exercice en mode professeur :
+
+- Étapes guidées
+- Indices techniques
+- Pas de solution complète sauf demande explicite
+- Reviews techniques
+- Approche architecture propre
+- Niveau intermédiaire → senior
+
+---
+
+## 🚀 Prochaine étape à définir
+
+Possibilités :
+
+- Sync multi-tabs via event `storage`
+- Pagination / infinite scroll
+- Tests unitaires des stores
+- Migration vers setup store
+- Gestion erreurs avancée (retry policy, backoff)
+- Optimisation réactivité
+- Normalisation API layer
+- Amélioration UX
+- Autre
+
+Repartons proprement à partir de cet état.
