@@ -51,6 +51,9 @@ export const useProductsStore = defineStore('products', {
                 }
             }
         },
+        setCategory(category: Category | null) {
+            this.selectedCategory = category
+        },
     },
     getters: {
         visibleProducts: (state) => {
