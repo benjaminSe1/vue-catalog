@@ -69,6 +69,8 @@ src/
 - Membership favoris en O(1) via Set
 - Events typés via `defineEmits`
 - Architecture propre, séparation responsabilités
+- Sync multi-tabs via event `storage`
+- Configuration propre eslint
 
 ---
 
@@ -89,7 +91,6 @@ Continuer l’exercice en mode professeur :
 
 Possibilités :
 
-- Sync multi-tabs via event `storage`
 - Pagination / infinite scroll
 - Tests unitaires des stores
 - Migration vers setup store
