@@ -6,10 +6,10 @@ useFavoritesStorageSync()
 </script>
 
 <template>
-  <v-app>
-    <Banner />
-    <v-main>
-      <router-view />
-    </v-main>
-  </v-app>
+    <v-app>
+        <Banner />
+        <v-main>
+            <router-view />
+        </v-main>
+    </v-app>
 </template>
