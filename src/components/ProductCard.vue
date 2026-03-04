@@ -21,7 +21,7 @@ const emit = defineEmits<{
                 <v-card-text>Price: ${{ product.price }}</v-card-text>
             </v-col>
             <v-col class="d-flex justify-end">
-                <v-btn icon variant="text" @click.stop="emit('toggle-favorite', product.id)">
+                <v-btn icon variant="text" @click.stop.prevent="emit('toggle-favorite', product.id)">
                     <v-icon>
                         {{ isFavorite ? 'mdi-heart' : 'mdi-heart-outline' }}
                     </v-icon>
