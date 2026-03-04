@@ -1,47 +1,53 @@
-import { defineStore } from 'pinia'
+import { defineStore } from "pinia"
+import { computed, ref } from "vue"
 
-type FavoritesState = {
-    ids: number[]
+export const FAVORITES_KEY = "favorites:ids"
+
+const persistIds = (ids: number[]) => {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
 }
 
-export const FAVORITES_KEY = "favorites:ids";
-const persistIds = (ids: number[]) => localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids))
-const getIds = (jsonToParse: string) => {
-    try {
-        const ids = JSON.parse(jsonToParse)
-        if (Array.isArray(ids)) {
-            return ids.map(Number).filter(Number.isFinite)
-        } else {
-            throw new Error("Invalid ids")
-        }
-    } catch (error: unknown) {
-        console.error("An error happened while parsing favorites product", error)
-        return []
-    }
+const parseJsonUnknown = (raw: string): unknown => JSON.parse(raw)
+
+const toFiniteNumberArray = (value: unknown): number[] => {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((v) => (typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN))
+    .filter(Number.isFinite)
 }
 
-export const useFavoritesStore = defineStore('favorites', {
-    state: (): FavoritesState => ({
-        ids: getIds(localStorage.getItem(FAVORITES_KEY) ?? '[]'),
-    }),
-    actions: {
-        addFavorite(id: number) {
-            if (!this.ids.includes(id)) this.ids.push(id)
-            persistIds(this.ids)
-        },
-        removeFavorite(id: number) {
-            this.ids = this.ids.filter(i => i !== id)
-            persistIds(this.ids)
-        },
-        toggleFavorite(id: number) {
-            if (this.ids.includes(id)) this.removeFavorite(id)
-            else this.addFavorite(id)
-        },
-        hydrateFromStorage() {
-            this.ids = getIds(localStorage.getItem(FAVORITES_KEY) ?? '[]')
-        }
-    },
-    getters: {
-        count: (state) => state.ids.length,
-    }
+const getIds = (jsonToParse: string): number[] => {
+  try {
+    return toFiniteNumberArray(parseJsonUnknown(jsonToParse))
+  } catch (error: unknown) {
+    console.error("An error happened while parsing favorites product", error)
+    return []
+  }
+}
+
+export const useFavoritesStore = defineStore("favorites", () => {
+  const ids = ref<number[]>(getIds(localStorage.getItem(FAVORITES_KEY) ?? "[]"))
+
+  const count = computed(() => ids.value.length)
+
+  function addFavorite(id: number) {
+    if (!ids.value.includes(id)) ids.value.push(id)
+    persistIds(ids.value)
+  }
+
+  function removeFavorite(id: number) {
+    ids.value = ids.value.filter((i) => i !== id)
+    persistIds(ids.value)
+  }
+
+  function toggleFavorite(id: number) {
+    if (ids.value.includes(id)) removeFavorite(id)
+    else addFavorite(id)
+  }
+
+  function hydrateFromStorage() {
+    ids.value = getIds(localStorage.getItem(FAVORITES_KEY) ?? "[]")
+  }
+
+  return { ids, count, addFavorite, removeFavorite, toggleFavorite, hydrateFromStorage }
 })

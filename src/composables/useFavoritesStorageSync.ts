@@ -1,19 +1,22 @@
-import { onMounted, onUnmounted } from "vue";
-import { FAVORITES_KEY, useFavoritesStore } from "../stores/favorites.store";
+import { onMounted, onUnmounted } from "vue"
+
+import { FAVORITES_KEY, useFavoritesStore } from "../stores/favorites.store"
 
 export function useFavoritesStorageSync() {
-    const { hydrateFromStorage } = useFavoritesStore()
+  const favoritesStore = useFavoritesStore()
 
-    const handlerStorageEvent = (e: StorageEvent) => {
-        if (e.storageArea !== localStorage || e.key !== FAVORITES_KEY) return
-        hydrateFromStorage()
-    }
+  const handleStorageEvent = (e: StorageEvent) => {
+    if (!e.newValue) return
+    if (e.storageArea !== localStorage || e.key !== FAVORITES_KEY) return
 
-    onMounted(() => {
-        window.addEventListener('storage', handlerStorageEvent)
-    })
+    favoritesStore.hydrateFromStorage()
+  }
 
-    onUnmounted(() => {
-        window.removeEventListener('storage', handlerStorageEvent)
-    })
+  onMounted(() => {
+    window.addEventListener("storage", handleStorageEvent)
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener("storage", handleStorageEvent)
+  })
 }
