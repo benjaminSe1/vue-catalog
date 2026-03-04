@@ -13,7 +13,7 @@ const toFiniteNumberArray = (value: unknown): number[] => {
   if (!Array.isArray(value)) return []
   return value
     .map((v) => (typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN))
-    .filter(Number.isFinite)
+    .filter((n) => Number.isFinite(n) && Number.isInteger(n) && n > 0)
 }
 
 const getIds = (jsonToParse: string): number[] => {
